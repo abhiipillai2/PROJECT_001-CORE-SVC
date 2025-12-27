@@ -1,0 +1,48 @@
+{
+  "name": "jet-pack",
+  "version": "1.0.0",
+  "description": "developed by Abhijith S Pillai",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhiipillai2/jet-pack-master.git"
+  },
+  "author": "Atom Billing Solutions",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abhiipillai2/jet-pack-master/issues"
+  },
+  "homepage": "https://github.com/abhiipillai2/jet-pack-master#readme",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "bwip-js": "^4.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.3",
+    "express-validator": "^7.2.1",
+    "http": "^0.0.1-security",
+    "instamojo-node": "^1.0.1",
+    "instamojo-payment-nodejs": "^3.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "log4js": "^6.9.1",
+    "moment": "^2.30.1",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.12.0",
+    "open": "^10.1.0",
+    "pdfkit": "^0.14.0",
+    "puppeteer": "^22.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

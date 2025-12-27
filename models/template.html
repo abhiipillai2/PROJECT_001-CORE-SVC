@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Record</title>
+</head>
+<body>
+  <style>
+    table {
+          margin-top :50px; 
+          width: 100%;
+          border-collapse: collapse;
+        }
+        th, td {
+          border: 1px solid black;
+          padding: 8px;
+          text-align: left;
+        }
+
+    .square-box {
+        width: 100px; /* Adjust width as needed */
+        height: 100px; /* Equal to width to make it square */
+        border: 2px solid black; /* Border style */
+    }
+  </style>
+  <div id="mainContaier" style="font-family: Arial, sans-serif;">
+    <div class="content-container" style="border: 1px solid black;padding: 10px;">
+      <h1 style="text-align: center;"> Service Record</h1>
+      <div class="header" style="border: 1px solid black;padding: 10px;">
+        <div class="logo">
+          <img  style="width: 100px;height: 100px;" src="${data.companyLogo}">
+        </div>
+        <div class="add-bar" style="width: 200px;">
+          <h3>${data.companyName}</h3>
+          <p>${data.adress}</p>
+            <p>PIN ${data.pin}</p>
+        </div>
+        <div class="header-table" style="float: right; margin-top: -200px;">
+          <table style=" display: inline-table;border-collapse: collapse;">
+            <tr>
+              <th>Date</th>
+              <td>${new Date(data.date).toLocaleDateString()}</td>
+            </tr>
+            <tr>
+                <th>Case ID</th>
+                <td>${data.caseId}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="customer deails" style="border: 1px solid black;padding: 10px;margin-top: 5px;">
+        <p>Customer Name: ${data.customerName}</p>
+        <p>Customer Email: ${data.customerEmail}</p>
+        <p>Customer Phone: ${data.customerPhone}</p>
+      </div>
+      <div class="serive-details"  style="border: 1px solid black;padding: 10px;margin-top: 5px;">
+        <h3>Service Details</h3>
+        <table>
+          <tr>
+            <th>No</th>
+            <th>Item</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Serial Number</th>
+          </tr>
+          <tr>
+            <td>${data.itemNo}</td>
+            <td>${data.item}</td>
+            <td>${data.brand}</td>
+            <td>${data.model}</td>
+            <td>${data.serialNumber}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="payment-details" style="border: 1px solid black;padding: 10px;margin-top: 5px;">
+        <div class="payment-table" style="width: 300px;">
+          <table style=" display: inline-table;border-collapse: collapse;">
+            <tr>
+              <th>Total Amount</th>
+              <td> ${data.estimateAmount}</td>
+            </tr>
+            <tr>
+                <th>Advance Amount</th>
+                <td> ${data.advancedPayment}</td>
+            </tr>
+            <tr>
+                <th>Balance Amount</th>
+                <td>${data.balance}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="auth" style="float: right; margin-top: -150px;">
+          <p style="text-align: center;">For ${data.companyName}</p>
+          <div class="square-box" style="margin-left: 25px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

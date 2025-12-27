@@ -1,0 +1,7 @@
+node_modules/
+.env
+gitPush.sh
+*.log
+log/
+logjet_pack.log
+jet-pack-core-svc.log
