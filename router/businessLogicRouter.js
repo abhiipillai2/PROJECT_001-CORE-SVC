@@ -266,5 +266,16 @@ router.get('/rptprofitlist',businessLogic.getSaleProfitlist)
 router.get('/rptprofitsummary',businessLogic.profitrptSummary)
 
 router.get('/rptplreportexcel',businessLogic.generatePLReportExcel)
+
+router.get('/api/v1/users/farmAgents',businessLogic.getAvailableFarmAgents)
+
+router.get('/api/v1/directPartners/users',businessLogic.getAttachedUsersFromDirectPartner)
+
+router.post('/api/v1/users/attachToDirectPatner',businessLogic.attachUserToDirectPartner)
+
+router.post('/api/v1/users/detachFromDirectPartner',businessLogic.detachUserFromDirectPartner)
+
+
+
 //exporting
 module.exports = router;
