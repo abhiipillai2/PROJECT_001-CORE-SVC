@@ -4111,10 +4111,10 @@ exports.usersGetAlllUsers = async (req, res) => {
                         row.role_index = 'ADMINISTRATOR';
                         break;
                     case 1:
-                        row.role_index = 'ENGINEER';
+                        row.role_index = 'SUPERVISOR';
                         break;
                     case 2:
-                        row.role_index = 'FRONT OFFICER';
+                        row.role_index = 'FARM AGENT';
                         break;
                     case 3:
                         row.role_index = 'SALES HEAD';
@@ -11121,3 +11121,247 @@ exports.generatePLReportExcel = async (req, res) => {
         if (connection) connection.release?.();
     }
 };
+
+
+exports.attachUserToDirectPartner = async (req, res) => {
+  let connection
+  try {
+    const { user_id, direct_partner_id, business_id } = req.body
+
+    if (!user_id || !direct_partner_id || !business_id) {
+      throw new Error("Missing mandatory fields")
+    }
+
+    connection = await pool.promise().getConnection()
+
+    /* 1️⃣ Validate user & role */
+    const [[user]] = await connection.query(
+      `
+      SELECT user_id, role_index
+      FROM \`master-users\`
+      WHERE user_id = ?
+        AND business_id = ?
+        AND status = 1
+      `,
+      [user_id, business_id]
+    )
+
+    if (!user) {
+      throw new Error("User not found")
+    }
+
+    if (user.role_index !== 2) {
+      throw new Error("Only farm agent users can be attached")
+    }
+
+    const [[existing]] = await connection.query(
+      `
+      SELECT id
+      FROM ATTACHED_USERS_LIST
+      WHERE user_id = ?
+        AND direct_partner_id = ?
+        AND business_id = ?
+        AND status = 'Active'
+      `,
+      [user_id, direct_partner_id, business_id]
+    )
+
+    if (existing) {
+      throw new Error("User already attached to this partner")
+    }
+
+    await connection.query(
+      `
+      INSERT INTO ATTACHED_USERS_LIST
+        (user_id, direct_partner_id, business_id, status)
+      VALUES (?, ?, ?, 'Active')
+      `,
+      [user_id, direct_partner_id, business_id]
+    )
+
+    await connection.query(
+      `
+      UPDATE \`master-users\`
+      SET attached_owner = ?
+      WHERE user_id = ?
+        AND business_id = ?
+      `,
+      [direct_partner_id, user_id, business_id]
+    )
+
+    res.send({
+      statusDesc: "Success",
+      statusCode: { code: "SC000" },
+      message: "User attached to direct partner successfully"
+    })
+
+  } catch (err) {
+    res.status(422).json({
+      statusDesc: "Failure",
+      statusCode: err.code || "F005",
+      message: err.message
+    })
+  } finally {
+    if (connection) connection.release()
+  }
+}
+
+
+exports.getAttachedUsersFromDirectPartner = async (req, res) => {
+  let connection
+  try {
+    const { partner_id, business_id } = req.query
+
+    if (!partner_id || !business_id) {
+      throw new Error("Missing mandatory parameters")
+    }
+
+    connection = await pool.promise().getConnection()
+
+    const [users] = await connection.query(
+      `
+      SELECT
+        a.direct_partner_id AS partner_id,
+        u.user_id,
+        u.full_name AS user_name,
+        u.e_mail AS user_email,
+        u.phone_number AS contact_number
+      FROM ATTACHED_USERS_LIST a
+      INNER JOIN \`master-users\` u 
+        ON u.user_id = a.user_id
+      WHERE a.direct_partner_id = ?
+        AND a.business_id = ?
+        AND a.status = 'Active'
+        AND u.status = 1
+      `,
+      [partner_id, business_id]
+    )
+
+    res.send({
+      statusDesc: "Success",
+      statusCode: { code: "SC000" },
+      params: users
+    })
+
+  } catch (err) {
+    res.status(422).json({
+      statusDesc: "Failure",
+      statusCode: err.code || "F005",
+      message: err.message
+    })
+  } finally {
+    if (connection) connection.release()
+  }
+}
+
+
+exports.getAvailableFarmAgents = async (req, res) => {
+  let connection
+  try {
+    const { business_id, partner_id } = req.query
+
+    if (!business_id || !partner_id) {
+      throw new Error("Missing mandatory parameters")
+    }
+
+    connection = await pool.promise().getConnection()
+
+    const [users] = await connection.query(
+      `
+      SELECT
+        user_id,
+        full_name,
+        e_mail,
+        phone_number
+      FROM \`master-users\`
+      WHERE role_index = 2
+        AND business_id = ?
+        AND status = 1
+        AND (attached_owner IS NULL OR attached_owner = 0 OR attached_owner != ?)
+      `,
+      [business_id, partner_id]
+    )
+
+    res.send({
+      statusDesc: "Success",
+      statusCode: { code: "SC000" },
+      params: users
+    })
+
+  } catch (err) {
+    res.status(422).json({
+      statusDesc: "Failure",
+      statusCode: err.code || "F005",
+      message: err.message
+    })
+  } finally {
+    if (connection) connection.release()
+  }
+}
+
+
+
+exports.detachUserFromDirectPartner = async (req, res) => {
+  let connection
+  try {
+    const { user_id, direct_partner_id, business_id } = req.body
+
+    if (!user_id || !direct_partner_id || !business_id) {
+      throw new Error("Missing mandatory fields")
+    }
+
+    connection = await pool.promise().getConnection()
+
+    const [[attached]] = await connection.query(
+      `
+      SELECT id
+      FROM ATTACHED_USERS_LIST
+      WHERE user_id = ?
+        AND direct_partner_id = ?
+        AND business_id = ?
+        AND status = 'Active'
+      `,
+      [user_id, direct_partner_id, business_id]
+    )
+
+    if (!attached) {
+      throw new Error("User is not attached to this partner")
+    }
+
+    await connection.query(
+      `
+      UPDATE ATTACHED_USERS_LIST
+      SET status = 'Inactive'
+      WHERE user_id = ?
+        AND direct_partner_id = ?
+        AND business_id = ?
+      `,
+      [user_id, direct_partner_id, business_id]
+    )
+
+    await connection.query(
+      `
+      UPDATE \`master-users\`
+      SET attached_owner = 0
+      WHERE user_id = ?
+        AND business_id = ?
+      `,
+      [user_id, business_id]
+    )
+
+    res.send({
+      statusDesc: "Success",
+      statusCode: { code: "SC000" },
+      message: "User detached successfully"
+    })
+
+  } catch (err) {
+    res.status(422).json({
+      statusDesc: "Failure",
+      statusCode: err.code || "F005",
+      message: err.message
+    })
+  } finally {
+    if (connection) connection.release()
+  }
+}
