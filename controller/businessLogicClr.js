@@ -11277,7 +11277,7 @@ exports.getAvailableFarmAgents = async (req, res) => {
       WHERE role_index = 2
         AND business_id = ?
         AND status = 1
-        AND (attached_owner IS NULL OR attached_owner = 0 OR attached_owner != ?)
+        AND (attached_owner IS NULL OR attached_owner = 0)
       `,
       [business_id, partner_id]
     )
