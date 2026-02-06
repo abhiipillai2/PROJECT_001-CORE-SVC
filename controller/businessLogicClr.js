@@ -11157,7 +11157,7 @@ exports.attachUserToDirectPartner = async (req, res) => {
     const [[existing]] = await connection.query(
       `
       SELECT id
-      FROM ATTACHED_USERS_LIST
+      FROM attached_users_list
       WHERE user_id = ?
         AND direct_partner_id = ?
         AND business_id = ?
@@ -11172,7 +11172,7 @@ exports.attachUserToDirectPartner = async (req, res) => {
 
     await connection.query(
       `
-      INSERT INTO ATTACHED_USERS_LIST
+      INSERT INTO attached_users_list
         (user_id, direct_partner_id, business_id, status)
       VALUES (?, ?, ?, 'Active')
       `,
@@ -11226,7 +11226,7 @@ exports.getAttachedUsersFromDirectPartner = async (req, res) => {
         u.full_name AS user_name,
         u.e_mail AS user_email,
         u.phone_number AS contact_number
-      FROM ATTACHED_USERS_LIST a
+      FROM attached_users_list a
       INNER JOIN \`master-users\` u 
         ON u.user_id = a.user_id
       WHERE a.direct_partner_id = ?
@@ -11277,7 +11277,7 @@ exports.getAvailableFarmAgents = async (req, res) => {
       WHERE role_index = 2
         AND business_id = ?
         AND status = 1
-        AND (attached_owner IS NULL OR attached_owner = 0 OR attached_owner != ?)
+        AND (attached_owner IS NULL OR attached_owner = 0)
       `,
       [business_id, partner_id]
     )
@@ -11315,7 +11315,7 @@ exports.detachUserFromDirectPartner = async (req, res) => {
     const [[attached]] = await connection.query(
       `
       SELECT id
-      FROM ATTACHED_USERS_LIST
+      FROM attached_users_list
       WHERE user_id = ?
         AND direct_partner_id = ?
         AND business_id = ?
@@ -11330,7 +11330,7 @@ exports.detachUserFromDirectPartner = async (req, res) => {
 
     await connection.query(
       `
-      UPDATE ATTACHED_USERS_LIST
+      UPDATE attached_users_list
       SET status = 'Inactive'
       WHERE user_id = ?
         AND direct_partner_id = ?
