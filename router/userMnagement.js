@@ -23,11 +23,17 @@ router.post('/realamRegistration', masterController.realamRegistration)
 //user login
 router.post('/userLogin', masterController.userLogin)
 
+//mobile user login
+router.post("/userLoginMobile", masterController.mobileUserLogin);
+
 //user logOut
 router.post('/userLogOut', masterController.userLogOut)
 
 //user status
 router.get('/userStatus', masterController.userStatus)
+
+//user status
+router.get('/mobileUserStatus', masterController.mobileUserStatus)
 
 //user details
 router.get('/userDetails', masterController.userDetails)

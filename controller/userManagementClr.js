@@ -638,6 +638,309 @@ exports.userLogin = async (req, res) => {
     }
 };
 
+//user mobile login
+exports.mobileUserLogin = async (req, res) => {
+  let connection;
+  try {
+    logger.info("User login initiated.");
+    console.log("User login initiated.");
+
+    // Client IP
+    const clientIp = req.socket.remoteAddress;
+
+    // Request body
+    const { e_mail, password } = req.body;
+
+    // Logging request details
+    logger.info(`Request reached from host ${clientIp} and request packet:`);
+    logger.info(req.body);
+    console.log(`Request reached from host ${clientIp} and request packet:`);
+    console.log(req.body);
+
+    // Primary validation
+    if (!e_mail || !password || e_mail === "" || password === "") {
+      logger.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      console.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      const error = new Error("Some mandatory fields need to be filled");
+      error.code = "F001";
+      throw error;
+    }
+
+    // Get database connection
+    connection = await pool.promise().getConnection();
+
+    logger.info("Database connection established.");
+    console.log("Database connection established.");
+
+    logger.info("Checking if email exists");
+    console.log("Checking if email exists");
+
+    // Check if the email exists
+    const [userRows] = await connection.query(
+      "SELECT * FROM `master-users` WHERE e_mail=?",
+      e_mail,
+    );
+    const userRowsForLog = userRows.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    logger.info(`Fetched ${userRows.length} user(s) successfully.`);
+    logger.info(userRowsForLog);
+    console.log(`Fetched ${userRows.length} user(s) successfully.`);
+    console.log(userRowsForLog);
+
+    if (userRows.length === 0) {
+      logger.error("Entered email is not correct");
+      console.error("Entered email is not correct");
+      res.send({
+        statusDesc: "Failure",
+        statusCode: { code: "F006" },
+        message: "User email is not correct",
+      });
+
+      return;
+    }
+
+    logger.info("Retrieving encrypted password for comparison");
+    console.log("Retrieving encrypted password for comparison");
+
+    // Retrieve encrypted password
+    const encryptedPassword = userRows[0].password;
+
+    logger.info("Verifying password");
+    console.log("Verifying password");
+
+    // Verify password
+    const match = await bcrypt.compare(password, encryptedPassword);
+
+    if (!match) {
+      logger.error("Password entered is not correct");
+      console.error("Password entered is not correct");
+      res.send({
+        statusDesc: "Failure",
+        statusCode: { code: "F007" },
+        message: "Wrong password",
+      });
+      return;
+    }
+    // Update status to 1 (logged in)
+    await connection.query(
+      "UPDATE `master-users` SET status = 1 WHERE e_mail=?",
+      e_mail,
+    );
+
+    logger.info("User status updated to logged in");
+    console.log("User status updated to logged in");
+
+    // Retrieve user details
+    const [userDetails] = await connection.query(
+      "SELECT slave_id, role_index, business_id, relam_id,full_name, e_mail, status FROM `master-users` WHERE e_mail=?",
+      e_mail,
+    );
+
+
+
+    logger.info("User details fetched from database");
+    logger.info(userDetails);
+    console.log("User details fetched from database");
+    console.log(userDetails);
+
+    const { slave_id, role_index, business_id, relam_id, status, full_name } =
+      userDetails[0];
+
+          let direct_partner_ids = [];
+    let user_type = "supervisor";
+
+    if (slave_id === 1) {
+      const [attachedUsers] = await connection.query(
+        `SELECT direct_partner_id
+         FROM attached_users_list
+         WHERE user_id = ?
+         AND status = 'Active'`,
+        [user_id],
+      );
+
+      direct_partner_ids = attachedUsers.map((row) => row.direct_partner_id);
+
+      if (direct_partner_ids.length > 0) {
+        user_type = "farm_agent";
+      }
+    }
+
+    const token = jwt.sign({ userEmail: e_mail }, process.env.JWT_SECRET);
+
+    logger.info("JWT token generated for user");
+    console.log("JWT token generated for user");
+
+    // Respond with user details
+    res.send({
+      statusDesc: "Success",
+      statusCode: { code: "SC000" },
+      message: "User logged successfully",
+      token: token,
+      param: {
+        userEmail: e_mail,
+        slaveId: slave_id,
+        roleIndex: role_index,
+        businessId: business_id,
+        relamId: relam_id,
+        status: status,
+        userName: full_name,
+        user_type: user_type,
+        direct_partner_ids: direct_partner_ids,
+      },
+    });
+    logger.info(
+      `User logged successfully using email ID: ${e_mail}, business Id: ${business_id}`,
+    );
+    console.log(
+      `User logged successfully using email ID: ${e_mail}, business Id: ${business_id}`,
+    );
+  } catch (err) {
+    logger.error("Error during user login:", err);
+    console.error("Error during user login:", err);
+    res.status(400).json({
+      statusDesc: "Failure",
+      statusCode: { code: "F005" },
+      message: err.message,
+    });
+  } finally {
+    logger.info("Releasing database connection.");
+    console.log("Releasing database connection.");
+
+    if (connection) connection.release(); // Ensure the connection is always released
+
+    logger.info("Database connection released");
+    console.log("Database connection released");
+  }
+};
+
+
+//user mobile
+exports.mobileUserStatus = async (req, res) => {
+  let connection;
+  try {
+    logger.info("Fetching user status initiated.");
+    console.log("Fetching user status initiated.");
+
+    // Client IP
+    const clientIp = req.socket.remoteAddress;
+
+    // Request parameters
+    const { email } = req.query;
+    console.log(req.query);
+
+    // Logging request details
+    logger.info(
+      `Request reached from host ${clientIp} for getting user status and request packet:`,
+    );
+    logger.info(req.query);
+    console.log(
+      `Request reached from host ${clientIp} for getting user status and request packet:`,
+    );
+    console.log(req.query);
+
+    // Primary validation
+    if (email && email !== "") {
+      logger.info("Primary validation passed.");
+      console.log("Primary validation passed.");
+
+      // Get database connection
+      connection = await pool.promise().getConnection();
+
+      logger.info("Database connection established.");
+      console.log("Database connection established.");
+
+      logger.info("Retrieving user status");
+      console.log("Retrieving user status");
+
+      // Query to get user status
+      const [rows] = await connection.query(
+        "SELECT user_id,e_mail,slave_id,role_index,full_name,relam_id,status,business_id FROM `master-users` WHERE e_mail=?",
+        email,
+      );
+
+      logger.info(`Fetched user status successfully.`);
+      logger.info(rows);
+      console.log(`Fetched user status successfully.`);
+      console.log(rows);
+
+      if (rows.length > 0) {
+        const status = rows[0].status;
+
+        let direct_partner_ids = [];
+        let user_type = "Supervisor";
+
+        if (rows[0].slave_id === 1) {
+          const [details] = await connection.execute(
+            `SELECT direct_partner_id
+             FROM attached_users_list
+             WHERE user_id = ?
+             AND status = 'Active'`,
+            [rows[0].user_id],
+          );
+
+          direct_partner_ids = details.map((row) => row.direct_partner_id);
+
+          if (direct_partner_ids.length > 0) {
+            user_type = "Farm Agent";
+          }
+        }
+        // Respond with user status
+        res.send({
+          statusDesc: "Success",
+          statusCode: { code: "SC000" },
+          message: "User status fetched successfully",
+          param: rows[0],
+          direct_partner_ids: direct_partner_ids,
+          user_type: user_type,
+        });
+        logger.info(`User status fetched successfully | ${status}`);
+        console.log(`User status fetched successfully | ${status}`);
+      } else {
+        logger.error("User not found");
+        console.error("User not found");
+        res.status(404).json({
+          statusDesc: "Failure",
+          statusCode: { code: "F006" },
+          message: "User not found",
+        });
+      }
+    } else {
+      logger.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      console.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      const error = new Error("Some mandatory fields need to be filled");
+      error.code = "F001";
+      throw error;
+    }
+  } catch (err) {
+    logger.error("Error during user status retrieval:", err);
+    console.error("Error during user status retrieval:", err);
+    res.status(400).json({
+      statusDesc: "Failure",
+      statusCode: { code: "F005" },
+      message: err.message,
+    });
+  } finally {
+    logger.info("Releasing database connection.");
+    console.log("Releasing database connection.");
+
+    if (connection) connection.release(); // Ensure the connection is always released
+
+    logger.info("Database connection released");
+    console.log("Database connection released");
+  }
+};
+
 //user logout
 exports.userLogOut = async (req, res) => {
     let connection;
