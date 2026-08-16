@@ -273,53 +273,53 @@ exports.MasterUserRegistration = async (req, res) => {
                     logger.info("New user inserted into the master-users table.");
                     console.log("New user inserted into the master-users table.");
 
-                    // Send email notification
-                    const payload = {
-                        request_id: "0001",
-                        to_adress: e_mail,
-                        template_id: "1200",
-                        subject: "Welcome to Jet Pack – Let's Get Started!",
-                        params: { username: full_name }
-                    };
+                    // // Send email notification
+                    // const payload = {
+                    //     request_id: "0001",
+                    //     to_adress: e_mail,
+                    //     template_id: "1200",
+                    //     subject: "Welcome to Jet Pack – Let's Get Started!",
+                    //     params: { username: full_name }
+                    // };
 
-                    try {
-                        await axios.post(`${NMS_URL}/genericSendEmailNotification`, payload);
+                    // try {
+                    //     await axios.post(`${NMS_URL}/genericSendEmailNotification`, payload);
 
-                        logger.info(`Email sent successfully using API: POST ${NMS_URL}/genericSendEmailNotification`);
-                        console.log(`Email sent successfully using API: POST ${NMS_URL}/genericSendEmailNotification`);
+                    //     logger.info(`Email sent successfully using API: POST ${NMS_URL}/genericSendEmailNotification`);
+                    //     console.log(`Email sent successfully using API: POST ${NMS_URL}/genericSendEmailNotification`);
 
-                    } catch (emailError) {
-                        logger.error("Error sending email:", emailError);
-                        console.error("Error sending email:", emailError);
-                    }
+                    // } catch (emailError) {
+                    //     logger.error("Error sending email:", emailError);
+                    //     console.error("Error sending email:", emailError);
+                    // }
 
-                    // Send meta notification notification
-                    const re_id = `REQ${Date.now()}`;
-                    const payloadMeta = {
-                        re_id: re_id,
-                        destination_phone_number: `91${phone_number}`,
-                        customer_name:full_name,
-                        template_id: "1011",
-                        message_type: "image",
-                        media_url: `${MEDIA_URL}/jet_pack_banner.jpg`,
-                        params:[
-                            {
-                                type: "text",
-                                text: full_name
-                            }
-                        ]
-                    };
+                    // // Send meta notification notification
+                    // const re_id = `REQ${Date.now()}`;
+                    // const payloadMeta = {
+                    //     re_id: re_id,
+                    //     destination_phone_number: `91${phone_number}`,
+                    //     customer_name:full_name,
+                    //     template_id: "1011",
+                    //     message_type: "image",
+                    //     media_url: `${MEDIA_URL}/jet_pack_banner.jpg`,
+                    //     params:[
+                    //         {
+                    //             type: "text",
+                    //             text: full_name
+                    //         }
+                    //     ]
+                    // };
 
-                    try {
-                        await axios.post(`${NMS_URL}/nms/api/v1/sendMetaNotifications`, payloadMeta);
+                    // try {
+                    //     await axios.post(`${NMS_URL}/nms/api/v1/sendMetaNotifications`, payloadMeta);
 
-                        logger.info(`Meta notification sent successfully using API: POST ${NMS_URL}//nms/api/v1/sendMetaNotifications`);
-                        console.log(`Meta notification sent successfully using API: POST ${NMS_URL}//nms/api/v1/sendMetaNotifications`);
+                    //     logger.info(`Meta notification sent successfully using API: POST ${NMS_URL}//nms/api/v1/sendMetaNotifications`);
+                    //     console.log(`Meta notification sent successfully using API: POST ${NMS_URL}//nms/api/v1/sendMetaNotifications`);
 
-                    } catch (metaError) {
-                        logger.error("Error sending notification:", metaError);
-                        console.error("Error sending notification:", metaError);
-                    }
+                    // } catch (metaError) {
+                    //     logger.error("Error sending notification:", metaError);
+                    //     console.error("Error sending notification:", metaError);
+                    // }
 
                     logger.info("User registration successful.");
                     console.log("User registration successful.");
