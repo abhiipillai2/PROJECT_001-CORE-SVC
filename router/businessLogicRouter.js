@@ -81,6 +81,9 @@ router.get('/openWorkGetAssignedWork', businessLogic.openWorkGetAssignedWork)
 //open work assigned work
 router.get('/experianceCustomerDetails', businessLogic.experianceCustomerDetails)
 
+//experince api for customer from phone number  
+router.get('/experianceCustomerFromPhone', businessLogic.experianceCustomerDetailsfromPhone)
+
 //open work assigned work
 router.get('/experianceCustomerItem', businessLogic.experianceCustomerItem)
 

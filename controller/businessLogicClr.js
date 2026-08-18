@@ -4515,6 +4515,92 @@ exports.experianceCustomerDetails = async (req, res) => {
     }
 };
 
+exports.experianceCustomerDetailsfromPhone = async (req, res) => {
+  let connection;
+  try {
+    // Get client IP
+    const clientIp = req.socket.remoteAddress;
+    const body = req.query;
+
+    const { business_id, phone_number } = body;
+    console.log(body);
+
+    // Logging
+    logger.info(
+      `Request reached from host ${clientIp} for experience customer details and request packet:`,
+    );
+    console.log(
+      `Request reached from host ${clientIp} for experience customer details and request packet:`,
+    );
+    logger.info(body);
+    console.log(body);
+
+    // Primary validation
+    logger.info("Entering primary validation section");
+    console.log("Entering primary validation section");
+    if (
+      business_id &&
+      phone_number &&
+      business_id !== "" &&
+      phone_number !== ""
+    ) {
+      // Establish database connection
+      logger.info("Requesting database connection from pool.");
+      console.log("Requesting database connection from pool.");
+      connection = await pool.promise().getConnection();
+      logger.info("Database connection established successfully.");
+      console.log("Database connection established successfully.");
+
+      // Query to get customer details from party_details table
+      const [rows] = await connection.query(
+        "SELECT id, customer_name, phone_number, email,billing_adress FROM `party_details` WHERE phone_number LIKE ? AND business_id = ?",
+        [`%${phone_number}%`, business_id],
+      );
+
+      if (rows.length >= 1) {
+        // If customer found, return the details
+        res.send({
+          statusDesc: "Success",
+          statusCode: { code: "SC000" },
+          message: "Get Party details successfully",
+          param: rows,
+        });
+        logger.info("Customer details retrieved successfully");
+        console.log("Customer details retrieved successfully");
+      } else {
+        // If no matching customer found
+        logger.error("No party available");
+        console.error("No party available");
+        res.status(200).json({
+          statusDesc: "Failure",
+          statusCode: { code: "F0015" },
+          message: "No party available",
+        });
+      }
+    } else {
+      logger.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      console.error(
+        "Primary validation error: Some mandatory fields need to be filled",
+      );
+      const error = new Error("Some mandatory fields need to be filled");
+      error.code = "F001";
+      throw error;
+    }
+  } catch (err) {
+    logger.error("Error processing request:", err);
+    console.error("Error processing request:", err);
+    res.status(422).json({
+      statusDesc: "Failure",
+      statusCode: err.code || "F005",
+      message: err.message,
+    });
+  } finally {
+    if (connection) connection.release(); // Ensure the connection is released back to the pool
+  }
+};
+
 //open nworks get work
 exports.experianceCustomerItem = async (req, res) => {
     let connection;
