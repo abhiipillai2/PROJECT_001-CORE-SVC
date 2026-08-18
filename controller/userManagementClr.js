@@ -717,7 +717,7 @@ exports.mobileUserLogin = async (req, res) => {
 
     // Retrieve user details
     const [userDetails] = await connection.query(
-      "SELECT user_id, slave_id, role_index, business_id, relam_id, full_name, e_mail, status FROM `master-users` WHERE e_mail=?",
+      "SELECT user_id, slave_id, role_index, business_id, relam_id, full_name, userName, e_mail, status FROM `master-users` WHERE e_mail=?",
       [e_mail],
     );
 
@@ -725,8 +725,15 @@ exports.mobileUserLogin = async (req, res) => {
     console.log("User details fetched from database");
 
     // FIX: destructure user_id properly
-    const { user_id, slave_id, role_index, business_id, relam_id, status, full_name } =
-      userDetails[0];
+    const {
+      user_id,
+      slave_id,
+      role_index,
+      business_id,
+      relam_id,
+      status,
+      userName,
+    } = userDetails[0];
 
     let direct_partner_ids = [];
     let user_type = "SUPERVISOR";
@@ -769,7 +776,7 @@ exports.mobileUserLogin = async (req, res) => {
         businessId: business_id,
         relamId: relam_id,
         status: status,
-        userName: full_name,
+        userName: userName,
         user_type: user_type,
         direct_partner_ids: direct_partner_ids,
       },
@@ -819,8 +826,8 @@ exports.mobileUserStatus = async (req, res) => {
       logger.info("Database connection established.");
       console.log("Database connection established.");
 
-      const [rows] = await connection.query(
-        "SELECT user_id, e_mail, slave_id, role_index, full_name, relam_id, status, business_id FROM `master-users` WHERE e_mail=?",
+        const [rows] = await connection.query(
+        "SELECT user_id, e_mail, slave_id, role_index, full_name, userName, relam_id, status, business_id FROM `master-users` WHERE e_mail=?",
         [email],
       );
 
