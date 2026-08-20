@@ -11318,7 +11318,6 @@ exports.getAttachedUsersFromDirectPartner = async (req, res) => {
       WHERE a.direct_partner_id = ?
         AND a.business_id = ?
         AND a.status = 'Active'
-        AND u.status = 1
       `,
       [partner_id, business_id]
     )
