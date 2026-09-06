@@ -6701,6 +6701,7 @@ exports.addNewParty = async (req, res) => {
             customer_name: Joi.string().required(),
             customer_phone_number: Joi.string().required(),
             billing_adress: Joi.string().required(),
+            gstin:Joi.string().optional().allow('',null),
             business_id: Joi.string().required()
         });
         let buyer_id = 0
@@ -6708,7 +6709,7 @@ exports.addNewParty = async (req, res) => {
         const { error } = schema.validate(req.body);
         if (error) throw new Error(`Validation Error: ${error.details[0].message}`);
 
-        const { customer_name, customer_phone_number, billing_adress, business_id } = req.body;
+        const { customer_name, customer_phone_number, billing_adress, business_id ,gstin} = req.body;
 
         logger.info("getting database connection");
         console.log("getting database connection");
@@ -6725,14 +6726,15 @@ exports.addNewParty = async (req, res) => {
 
         if (existingParty.length === 0) {
             const [insertParty] = await connection.query(
-                'INSERT INTO `party_details` (customer_name, phone_number, email, alternate_phone_number, business_id, billing_adress) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO `party_details` (customer_name, phone_number, email, alternate_phone_number, business_id, billing_adress,gstin) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 [
                     customer_name,
                     customer_phone_number,
-                    "email",
+                    "",
                     "+91",
                     business_id,
-                    billing_adress
+                    billing_adress,
+                    gstin
                 ]
             );
             buyer_id = insertParty.insertId;
@@ -6821,6 +6823,7 @@ exports.addNewParty = async (req, res) => {
         if (connection) connection.release();
     }
 };
+
 
 //adding new partner 
 exports.createnewpartner = async (req, res) => {
@@ -10572,6 +10575,7 @@ exports.viewpartner = async (req, res) => {
     }
 };
 
+
 //update partner
 exports.updatecustomer = async (req, res) => {
     let connection;
@@ -10583,13 +10587,14 @@ exports.updatecustomer = async (req, res) => {
                 customer_email: Joi.string().allow('').email().optional(),
                 customer_address: Joi.string().allow('').optional(),
                 customer_alternate_no: Joi.string().allow('').optional(),
-                business_id: Joi.string().required()
+                business_id: Joi.string().required(),
+                gstin:Joi.string().allow('',null).optional()
         });
 
         const { error } = schema.validate(req.body);
         if (error) throw new Error(`Validation Error: ${error.details[0].message}`);
 
-        const {id,customer_name, customer_no, customer_email,customer_address,customer_alternate_no,business_id } = req.body;
+        const {id,customer_name, customer_no, customer_email,customer_address,customer_alternate_no,business_id ,gstin} = req.body;
 
         const lengthRegex = /^\d{10}$/;
             if (lengthRegex.test(customer_no)) {
@@ -10601,8 +10606,8 @@ exports.updatecustomer = async (req, res) => {
             console.log("database connection established");
 
             const [updateResult] = await connection.query(
-                'UPDATE party_details SET customer_name = ?,phone_number=?,email=?,alternate_phone_number=?,billing_adress=? WHERE id = ?  AND business_id = ?',
-                [customer_name, customer_no,customer_email,customer_alternate_no,customer_address,id, business_id]
+                'UPDATE party_details SET customer_name = ?,phone_number=?,email=?,alternate_phone_number=?,billing_adress=?,gstin=? WHERE id = ?  AND business_id = ?',
+                [customer_name, customer_no,customer_email,customer_alternate_no,customer_address,gstin,id, business_id]
             );
 
             if (updateResult.affectedRows > 0) {
